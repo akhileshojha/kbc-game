@@ -1,0 +1,2 @@
+# kbc-game
+MonoRepo + MicroServices
