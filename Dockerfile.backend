@@ -1,0 +1,23 @@
+# This Dockerfile is for all Nest.js backend services.
+
+# --- Stage 1: Builder ---
+FROM node:20-alpine AS builder
+ARG APP_NAME
+WORKDIR /usr/src/app
+RUN npm install -g pnpm
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm turbo build --filter=@kbc/${APP_NAME}
+
+# --- Stage 2: Production Pruner ---
+FROM builder AS pruner
+ARG APP_NAME
+WORKDIR /usr/src/app
+RUN pnpm deploy --prod --filter=@kbc/${APP_NAME} /prod
+
+# --- Stage 3: Production Runner ---
+FROM node:20-alpine AS runner
+ARG APP_NAME
+WORKDIR /usr/src/app
+COPY --from=pruner /prod .
+CMD ["node", "dist/main.js"]

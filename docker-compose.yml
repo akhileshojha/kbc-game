@@ -1,32 +1,53 @@
 # version: '3.8'
 
 services:
-  # --- Backend Microservices ---
-  api-gateway:
+  # --- Frontend Applications ---
+  web:
+    container_name: kbc-game-web
     build:
       context: .
-      dockerfile: ./packages/api-gateway/Dockerfile
+      dockerfile: Dockerfile.frontend
+      args:
+        APP_NAME: web
+    ports:
+      - "5173:80"
+
+  admin-ui:
+    container_name: kbc-game-admin-ui
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        APP_NAME: admin-ui
+    ports:
+      - "5174:80"
+
+  # --- Backend Microservices ---
+  api-gateway:
+    container_name: kbc-api-gateway
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
       args:
         APP_NAME: api-gateway
-    container_name: kbc_api_gateway
     ports:
       - "3000:3000"
     environment:
+      - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - kafka
       - service-auth
       - service-game
       - service-quiz
-      - service-analytics
 
   service-auth:
+    container_name: kbc-service-auth
     build:
       context: .
-      dockerfile: ./packages/service-auth/Dockerfile
+      dockerfile: Dockerfile.backend
       args:
         APP_NAME: service-auth
-    container_name: kbc_service_auth
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
@@ -34,120 +55,102 @@ services:
       - mysql
 
   service-game:
+    container_name: kbc-service-game
     build:
       context: .
-      dockerfile: ./packages/service-game/Dockerfile
+      dockerfile: Dockerfile.backend
       args:
         APP_NAME: service-game
-    container_name: kbc_service_game
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - KAFKA_BROKER=kafka:9092
     depends_on:
       - mysql
       - redis
       - kafka
 
   service-quiz:
+    container_name: kbc-service-quiz
     build:
       context: .
-      dockerfile: ./packages/service-quiz/Dockerfile
+      dockerfile: Dockerfile.backend
       args:
         APP_NAME: service-quiz
-    container_name: kbc_service_quiz
     environment:
       - DATABASE_URL=${DATABASE_URL}
     depends_on:
       - mysql
 
   service-analytics:
+    container_name: kbc-service-analytics
     build:
       context: .
-      dockerfile: ./packages/service-analytics/Dockerfile
+      dockerfile: Dockerfile.backend
       args:
         APP_NAME: service-analytics
-    container_name: kbc_service_analytics
     environment:
       - MONGO_URI=${MONGO_URI}
+      - KAFKA_BROKER=kafka:9092
     depends_on:
-      - mongo
+      - mongodb
       - kafka
-
-  # --- Frontend Applications ---
-  web:
-    build:
-      context: .
-      dockerfile: ./packages/web/Dockerfile
-      args:
-        APP_NAME: web
-    container_name: kbc_web
-    ports:
-      - "5173:80"
-
-  admin-ui:
-    build:
-      context: .
-      dockerfile: ./packages/admin-ui/Dockerfile
-      args:
-        APP_NAME: admin-ui
-    container_name: kbc_admin_ui
-    ports:
-      - "5174:80"
 
   # --- Infrastructure ---
   mysql:
     image: mysql:8.0
-    container_name: kbc_mysql
+    container_name: kbc-mysql
     ports:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
 
   redis:
     image: redis:7-alpine
-    container_name: kbc_redis
+    container_name: kbc-redis
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - redis-data:/data
 
-  mongo:
+  mongodb:
     image: mongo:6.0
-    container_name: kbc_mongo
+    container_name: kbc-mongodb
     ports:
       - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
     volumes:
-      - mongo_data:/data/db
+      - mongo-data:/data/db
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.0.1
-    container_name: kbc_zookeeper
+    image: confluentinc/cp-zookeeper:latest
+    container_name: kbc-zookeeper
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
 
   kafka:
-    image: confluentinc/cp-kafka:7.0.1
-    container_name: kbc_kafka
+    image: confluentinc/cp-kafka:latest
+    container_name: kbc-kafka
     ports:
       - "9092:9092"
     depends_on:
       - zookeeper
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
 
 volumes:
-  mysql_data:
-  redis_data:
-  mongo_data:
+  mysql-data:
+  redis-data:
+  mongo-data:
