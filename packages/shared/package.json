@@ -1,0 +1,17 @@
+{
+  "name": "@kbc/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "lint": "eslint \"**/*.ts\""
+  },
+  "devDependencies": {
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "typescript": "^5.4.5"
+  }
+}

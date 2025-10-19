@@ -1,0 +1,16 @@
+{
+    // Inherits common settings from the root tsconfig.base.json
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+      // Allows this file to be part of a composite project build
+      "composite": true,
+      // Specifies that this config is for modern JavaScript modules
+      "module": "ESNext",
+      // Uses the modern module resolution strategy required by Vite
+      "moduleResolution": "bundler",
+      // Allows importing TypeScript files with their extension
+      "allowImportingTsExtensions": true
+    },
+    // Tells TypeScript to only apply these settings to the vite.config.ts file
+    "include": ["vite.config.ts"]
+  }
