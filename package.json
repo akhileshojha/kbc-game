@@ -9,7 +9,9 @@
     "dev": "turbo dev",
     "test": "turbo test",
     "lint": "turbo lint",
-    "clean": "turbo clean"
+    "clean": "turbo clean",
+    "docker:dev": "docker-compose up --build -d",
+    "docker:stop": "docker-compose down"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.3.2",

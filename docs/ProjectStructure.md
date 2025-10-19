@@ -15,7 +15,7 @@
     │   ├── src/
     │   ├── index.html
     │   ├── nginx.conf
-    │   ├── package.json
+    │   ├── package.jsonww
     │   ├── tsconfig.json
     │   ├── tsconfig.node.json
     │   └── vite.config.ts

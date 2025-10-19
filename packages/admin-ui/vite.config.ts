@@ -7,13 +7,13 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      // Allows for cleaner imports, e.g., '@/components/Button'
       '@': path.resolve(__dirname, './src'),
     },
   },
   server: {
-    // This is useful for Docker development, ensuring the server is accessible
+    // Crucial for Docker: ensures the server is accessible outside the container
     host: '0.0.0.0',
-    port: 5174, // Default port for the 'web' app
+    // Match the port in docker-compose.yml
+    port: 5174,
   },
 })

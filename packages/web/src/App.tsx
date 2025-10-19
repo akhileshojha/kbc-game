@@ -1,7 +1,7 @@
 function App() {
     return (
       <div className="App">
-        <h1>KBC Game Placeholder</h1>
+        <h1>KBC Game Web App</h1>
       </div>
     )
   }
