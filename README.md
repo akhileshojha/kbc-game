@@ -1,134 +1,86 @@
-# KBC Game - Monorepo
+# KBC Game - Full Stack Monorepo
 
-This monorepo contains the full stack for the KBC Style Quiz Game, including frontend applications, backend microservices, and infrastructure configurations.
+Welcome to the KBC Style Quiz Game project\! This repository contains the complete full-stack application, built using a modern microservice architecture and orchestrated with Docker.
 
-First-Time Setup & Docker Workflow
+## 🏛️ Architecture Overview
 
-1. Prerequisites
+This project is structured as a `pnpm` monorepo managed by Turborepo. It utilizes a microservice architecture to ensure scalability and separation of concerns.
 
-Docker & Docker Compose
+  - **Frontend Apps**: Two separate React (Vite) applications for the player (`web`) and the admin (`admin-ui`).
+  - **Backend Services**: Multiple Nest.js microservices, each with a distinct responsibility (authentication, game logic, etc.).
+  - **Event Bus**: Apache Kafka is used for asynchronous, event-driven communication.
+  - **Databases**: A polyglot persistence approach using MySQL, Redis, and MongoDB.
+  - **Containerization**: The entire stack is containerized with Docker for a consistent development environment.
 
-Node.js & pnpm (npm install -g pnpm)
+-----
 
-2. Create Environment File
+## 🚀 Getting Started
 
-Before the first run, create a .env file in the root of the project and paste the required environment variables into it.
+Follow these steps to get the entire application running on your local machine.
 
-3. Full Reset & Build (Recommended for First Run or Errors)
+### 1\. Prerequisites
 
-Important: Follow these steps exactly to ensure your local environment is clean and your pnpm-lock.yaml file is correctly generated before running Docker.
+  - **Docker & Docker Compose**: Ensure they are installed and running on your system.
+  - **Node.js & pnpm**: Required for installing dependencies. Install `pnpm` globally via `npm install -g pnpm`.
 
-From the root of the project, run the following commands in order:
+### 2\. Environment Setup
 
-# Step 1: (Optional but Recommended) Clean up any old Docker containers and volumes to start fresh.
-docker-compose down -v
+The project uses a `.env` file at the root to configure all services.
 
-# Step 2: (Crucial) Remove old node_modules and the outdated lockfile. This forces a clean install.
-rm -rf node_modules pnpm-lock.yaml
+```bash
+# Create the environment file from the example (only needs to be done once)
+cp .env.example .env
+```
 
-# Step 3: (Crucial) Regenerate the lockfile and install all dependencies based on your latest package.json files.
-pnpm install
+*You can review the `.env` file to see the default credentials and ports.*
 
-# Step 4: Build and start all services with Docker. This will now use the correct, up-to-date lockfile.
-docker-compose up --build -d
+### 3\. Full Reset & Build (First Run or After Errors)
 
+**Important**: Follow these steps exactly to ensure your local environment is clean and your `pnpm-lock.yaml` file is correctly generated before running Docker.
 
-4. Accessing the Applications
+From the **root of the project**, run the following commands in order:
 
-Player Game App: http://localhost:5173
+1.  **(Optional) Clean up old Docker containers and volumes to start fresh.**
 
-Admin Dashboard: http://localhost:5174
+    ```bash
+    docker-compose down -v
+    ```
 
-API Gateway: http://localhost:3000
+2.  **(Crucial) Remove old `node_modules` and the outdated lockfile.** This forces a clean install.
 
-Troubleshooting
+    ```bash
+    rm -rf node_modules pnpm-lock.yaml
+    ```
 
-Lockfile Errors (ERR_PNPM_OUTDATED_LOCKFILE)
+3.  **(Crucial) Regenerate the lockfile and install all dependencies.**
 
-If you encounter this error, it means your pnpm-lock.yaml is out of sync. You must run the full reset workflow from Step 3 above to fix it. Simply running pnpm install again may not be enough.
+    ```bash
+    pnpm install
+    ```
 
-Viewing Logs
+4.  **Build and start all services with Docker.** This will now use the correct, up-to-date lockfile.
 
-To see the logs for a specific service (e.g., api-gateway), run:
+    ```bash
+    docker-compose up --build -d
+    ```
 
-docker-compose logs -f api-gateway
+### Accessing the Running Services
 
+| Service | Purpose | URL / Access Point |
+| :--- | :--- | :--- |
+| **Player App** | The main game interface for players. | `http://localhost:5173` |
+| **Admin Dashboard**| For admins to manage quizzes (CRUD). | `http://localhost:5174` |
+| **API Gateway** | The public entry point for all APIs. | `http://localhost:3000` |
+| **MySQL DB** | Primary relational database. | `localhost:3306` |
+| **Redis** | In-memory store for game sessions. | `localhost:6379` |
+| **MongoDB** | Database for analytics. | `localhost:27017` |
 
-Stopping the Application
+### Common Docker Commands
 
-To stop all running containers, run:
-
-docker-compose down
-
-
-
-/kbc-game-turborepo
-├── .github/
-│   └── workflows/
-│       └── ci-cd.yml          # CI/CD pipeline (e.g., build, test, push images, deploy to K8s)
-├── .vscode/
-│   └── launch.json            # VSCode debug configurations
-├── infra/
-│   ├── docker-compose.yml     # For LOCAL development (spins up all dbs, kafka, etc.)
-│   └── k8s/                   # Kubernetes manifests for production deployment
-│       ├── 0-namespaces.yaml
-│       ├── 1-persistent-volumes.yaml
-│       ├── 2-configmaps-secrets.yaml
-│       ├── 3-mysql.yaml
-│       ├── 4-redis.yaml
-│       ├── 5-mongodb.yaml
-│       ├── 6-kafka-zookeeper.yaml
-│       └── services/          # Deployments, Services, and Ingress for each microservice
-│           ├── api-gateway.yaml
-│           ├── service-auth.yaml
-│           ├── service-game.yaml
-│           ├── service-quiz.yaml
-│           └── service-analytics.yaml
-├── packages/
-│   ├── admin-ui/              # Admin Dashboard React App
-│   │   ├── public/
-│   │   ├── src/               # (Components, Pages, Hooks, Services using Shadcn, TanStack Table)
-│   │   ├── Dockerfile         # Multi-stage build for a lean Nginx production image
-│   │   ├── nginx.conf         # Nginx config for the admin app container
-│   │   └── package.json
-│   │
-│   ├── api-gateway/           # Nest.js API Gateway (Public-facing entry point)
-│   │   ├── src/               # (Handles HTTP/WebSockets, forwards to services via Kafka/gRPC)
-│   │   ├── Dockerfile         # Multi-stage build for the Node.js service
-│   │   └── package.json
-│   │
-│   ├── service-analytics/     # Nest.js Microservice for Analytics
-│   │   ├── src/               # (Subscribes to Kafka topics, writes to MongoDB)
-│   │   ├── Dockerfile
-│   │   └── package.json
-│   │
-│   ├── service-auth/          # Nest.js Microservice for Authentication
-│   │   ├── src/               # (Handles user creation, login, JWTs, RBAC logic)
-│   │   ├── Dockerfile
-│   │   └── package.json
-│   │
-│   ├── service-game/          # Nest.js Microservice for Core Game Logic
-│   │   ├── src/               # (Manages active game state in Redis, writes history to MySQL)
-│   │   ├── Dockerfile
-│   │   └── package.json
-│   │
-│   ├── service-quiz/          # Nest.js Microservice for Quiz/Question CRUD
-│   │   ├── src/               # (Handles all admin-related quiz management)
-│   │   ├── Dockerfile
-│   │   └── package.json
-│   │
-│   ├── shared/                # Shared library for types, DTOs, configs
-│   │   ├── src/
-│   │   └── package.json       # (No Dockerfile, this is a build-time dependency)
-│   │
-│   └── web/                   # Player-Facing React App
-│       ├── public/
-│       ├── src/               # (Components, Pages, Redux Store, TanStack Query, Storybook)
-│       ├── Dockerfile         # Multi-stage build for a lean Nginx production image
-│       ├── nginx.conf         # Nginx config for the player app container
-│       └── package.json
-│
-├── .dockerignore
-├── .gitignore
-├── package.json               # Root package.json (defines Turborepo workspaces)
-└── turbo.json                 # Turborepo pipeline configuration
+| Command | Description |
+| :--- | :--- |
+| `docker-compose up -d` | Start all services in the background. |
+| `docker-compose down` | Stop all running services. |
+| `docker-compose down -v` | **(Full Reset)** Stop all services and **delete all data** in volumes. |
+| `docker-compose logs -f <service>`| Follow the logs for a specific service (e.g., `api-gateway`). |
+| `docker-compose exec <service> sh` | Open a shell inside a running container for debugging. |

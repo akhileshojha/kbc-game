@@ -20,24 +20,18 @@ RUN pnpm install --frozen-lockfile
 # that ensures all dependencies are correctly linked before the next stage.
 RUN pnpm turbo build
 
-# --- Stage 2: Production Runner ---
-# This stage creates the final, lean image for the specific service.
+## --- Stage 2: Runner ---
 FROM node:20-alpine AS runner
 
-# This ARG is passed from docker-compose.yml and is crucial.
 ARG APP_NAME
-
 WORKDIR /usr/src/app
 
-# Copy the built application files for the specific service from the builder stage.
-COPY --from=builder /usr/src/app/packages/${APP_NAME}/dist ./dist
+RUN npm install -g pnpm
 
-# Copy only the production package.json for the specific service.
-COPY --from=builder /usr/src/app/packages/${APP_NAME}/package.json ./package.json
+# Use pnpm deploy to extract only what's needed for this package
+COPY --from=builder /usr/src/app ./
+RUN pnpm deploy --prod --filter=@kbc/${APP_NAME} ./prod
 
-# Install ONLY the production dependencies for the specific service.
-RUN npm install -g pnpm && pnpm install --prod
-
-# Set the command to run the application.
+WORKDIR /usr/src/app/prod
 CMD ["node", "dist/main"]
 
