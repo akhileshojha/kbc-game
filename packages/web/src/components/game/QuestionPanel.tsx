@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 
-// Define the types for the question and component props
 interface Question {
   id: number;
   text: string;
@@ -13,6 +12,7 @@ interface Question {
 interface Props {
   question: Question;
   onSelectAnswer: (selectedOption: string) => void;
+  isAnswered: boolean;
 }
 
 const OptionButton = ({
@@ -29,43 +29,39 @@ const OptionButton = ({
   isDisabled: boolean;
 }) => {
   const baseClasses =
-    'w-full text-left p-3 md:p-4 rounded-lg border-2 transition-all duration-300 ease-in-out text-lg font-semibold flex items-center gap-4';
+    'w-full text-left p-4 rounded-full border-2 transition-all duration-300 ease-in-out text-lg font-semibold flex items-center justify-center relative';
+  
   const statusClasses = {
-    default: 'bg-blue-900/50 border-blue-400 hover:bg-blue-800/70 hover:border-yellow-400',
-    selected: 'bg-orange-600 border-orange-400 animate-pulse',
-    correct: 'bg-green-600 border-green-400',
-    incorrect: 'bg-red-600 border-red-400',
+    default: 'bg-black/40 border-blue-400/50 hover:bg-blue-900/70 hover:border-yellow-400',
+    selected: 'bg-gradient-to-r from-orange-500 to-yellow-500 border-orange-300 text-black animate-pulse',
+    correct: 'bg-gradient-to-r from-green-500 to-emerald-500 border-green-300 text-black',
+    incorrect: 'bg-gradient-to-r from-red-500 to-rose-500 border-red-300 text-white',
   };
 
   return (
     <button
       onClick={onClick}
       disabled={isDisabled}
-      className={`${baseClasses} ${statusClasses[status]} ${isDisabled && status === 'default' ? 'opacity-50 cursor-not-allowed' : ''}`}
+      className={`${baseClasses} ${statusClasses[status]} ${isDisabled && status === 'default' ? 'opacity-30 cursor-not-allowed' : ''}`}
     >
-      <span className="text-yellow-400 font-bold">{optionKey}:</span>
+      <span className="absolute left-6 text-yellow-400 font-bold">{optionKey}:</span>
       <span>{text}</span>
     </button>
   );
 };
 
 
-const QuestionPanel = ({ question, onSelectAnswer }: Props) => {
+const QuestionPanel = ({ question, onSelectAnswer, isAnswered }: Props) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [isAnswered, setIsAnswered] = useState(false);
-  
   const { hiddenOptions } = useSelector((state: RootState) => state.game);
   
-  // Reset state when a new question is loaded
   useEffect(() => {
     setSelectedOption(null);
-    setIsAnswered(false);
   }, [question]);
 
   const handleClick = (optionKey: string) => {
     if (isAnswered) return;
     setSelectedOption(optionKey);
-    setIsAnswered(true);
     onSelectAnswer(optionKey);
   };
 
@@ -83,17 +79,17 @@ const QuestionPanel = ({ question, onSelectAnswer }: Props) => {
   };
 
   return (
-    <div className="bg-black/30 backdrop-blur-sm border-2 border-blue-500 rounded-xl p-6 md:p-8 shadow-2xl w-full">
-      {/* Question Text */}
-      <div className="mb-8 p-4 bg-blue-900/50 rounded-lg text-center">
-        <p className="text-xl md:text-2xl font-medium leading-relaxed">{question.text}</p>
+    <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-8">
+      {/* Central Question Stage */}
+      <div className="relative w-full aspect-video flex items-center justify-center p-8 text-center bg-black/40 backdrop-blur-md rounded-3xl border-2 border-blue-500/50 shadow-2xl shadow-blue-500/20">
+         <p className="text-2xl md:text-3xl font-semibold leading-relaxed">{question.text}</p>
       </div>
 
       {/* Options */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-5">
         {Object.entries(question.options).map(([key, value]) => {
           if (hiddenOptions.includes(key)) {
-            return null; // Don't render hidden options by lifelines
+            return <div key={key} className="w-full h-16 rounded-full bg-black/40 opacity-30"></div>; // Placeholder for hidden options
           }
           return (
             <OptionButton

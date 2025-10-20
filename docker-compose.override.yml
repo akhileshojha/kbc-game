@@ -13,7 +13,8 @@ services:
     command: pnpm turbo dev --filter=@kbc/web # <-- FIX
     volumes:
       - ./packages/web:/usr/src/app/packages/web
-      - /usr/src/app/packages/web/node_modules
+      - /usr/src/app/node_modules
+    init: true
     ports:
       - "5173:5173"
 
@@ -27,7 +28,8 @@ services:
     command: pnpm turbo dev --filter=@kbc/admin-ui # <-- FIX
     volumes:
       - ./packages/admin-ui:/usr/src/app/packages/admin-ui
-      - /usr/src/app/packages/admin-ui/node_modules
+      - /usr/src/app/node_modules
+    init: true
     ports:
       - "5174:5174"
 
@@ -42,8 +44,9 @@ services:
     command: pnpm turbo dev --filter=@kbc/api-gateway # <-- FIX
     volumes:
       - ./packages/api-gateway:/usr/src/app/packages/api-gateway
-      - /usr/src/app/packages/api-gateway/node_modules
+      - /usr/src/app/node_modules
       - /usr/src/app/packages/api-gateway/dist
+    init: true
 
   service-auth:
     build:
@@ -55,8 +58,9 @@ services:
     command: pnpm turbo dev --filter=@kbc/service-auth # <-- FIX
     volumes:
       - ./packages/service-auth:/usr/src/app/packages/service-auth
-      - /usr/src/app/packages/service-auth/node_modules
+      - /usr/src/app/node_modules
       - /usr/src/app/packages/service-auth/dist
+    init: true
 
   service-game:
     build:
@@ -68,8 +72,9 @@ services:
     command: pnpm turbo dev --filter=@kbc/service-game # <-- FIX
     volumes:
       - ./packages/service-game:/usr/src/app/packages/service-game
-      - /usr/src/app/packages/service-game/node_modules
+      - /usr/src/app/node_modules
       - /usr/src/app/packages/service-game/dist
+    init: true
 
   service-quiz:
     build:
@@ -81,8 +86,9 @@ services:
     command: pnpm turbo dev --filter=@kbc/service-quiz # <-- FIX
     volumes:
       - ./packages/service-quiz:/usr/src/app/packages/service-quiz
-      - /usr/src/app/packages/service-quiz/node_modules
+      - /usr/src/app/node_modules
       - /usr/src/app/packages/service-quiz/dist
+    init: true
 
   service-analytics:
     build:
@@ -94,5 +100,6 @@ services:
     command: pnpm turbo dev --filter=@kbc/service-analytics # <-- FIX
     volumes:
       - ./packages/service-analytics:/usr/src/app/packages/service-analytics
-      - /usr/src/app/packages/service-analytics/node_modules
+      - /usr/src/app/node_modules
       - /usr/src/app/packages/service-analytics/dist
+    init: true

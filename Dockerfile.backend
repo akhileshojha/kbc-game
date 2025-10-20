@@ -1,12 +1,33 @@
-# This Dockerfile is for all Nest.js backend services.
-
 # --- Stage 1: Builder ---
 FROM node:20-alpine AS builder
 ARG APP_NAME
 WORKDIR /usr/src/app
 RUN npm install -g pnpm
-COPY . .
+
+# --- Cache dependencies ---
+# Copy root package manager files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# --- FIX: Copy ALL package.json files from all workspaces ---
+# This ensures pnpm installs dependencies for all sub-packages
+COPY packages/admin-ui/package.json ./packages/admin-ui/
+COPY packages/api-gateway/package.json ./packages/api-gateway/
+COPY packages/service-analytics/package.json ./packages/service-analytics/
+COPY packages/service-auth/package.json ./packages/service-auth/
+COPY packages/service-game/package.json ./packages/service-game/
+COPY packages/service-quiz/package.json ./packages/service-quiz/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/web/package.json ./packages/web/
+# --- END FIX ---
+
+# This step will now install dependencies for all packages
 RUN pnpm install --frozen-lockfile
+
+# --- Copy source & build ---
+# Now, copy the rest of the source code
+COPY . .
+
+# This build step will re-run when your code changes, but the install is cached
 RUN pnpm turbo build --filter=@kbc/${APP_NAME}
 
 # --- Stage 2: Production Pruner ---
@@ -20,4 +41,5 @@ FROM node:20-alpine AS runner
 ARG APP_NAME
 WORKDIR /usr/src/app
 COPY --from=pruner /prod .
+USER node
 CMD ["node", "dist/main.js"]

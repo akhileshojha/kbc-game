@@ -1,86 +1,71 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '@/store/store';
-import { nextQuestion, selectAnswer, useLifeline, resetGame } from '@/store/gameSlice';
+import { nextQuestion, selectAnswer } from '@/store/gameSlice';
 
 import QuestionPanel from '@/components/game/QuestionPanel';
 import MoneyPyramid from '@/components/game/MoneyPyramid';
 import Lifelines from '@/components/game/Lifelines';
 import Timer from '@/components/game/Timer';
+
 import { MOCK_QUESTIONS } from '@/lib/questions';
 
 const GamePage = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [isAnswered, setIsAnswered] = useState(false);
 
-  const {
-    questionNumber,
-    isGameOver,
-  } = useSelector((state: RootState) => state.game);
+  const { questionNumber, isGameOver } = useSelector((state: RootState) => state.game);
 
-  useEffect(() => {
-    dispatch(resetGame());
-  }, [dispatch]);
+  const currentQuestion = MOCK_QUESTIONS.find(q => q.id === questionNumber);
 
   useEffect(() => {
     if (isGameOver) {
-      setTimeout(() => navigate('/end'), 2000);
+      setTimeout(() => navigate('/game-over'), 3000);
     }
   }, [isGameOver, navigate]);
 
-  const currentQuestion = MOCK_QUESTIONS[questionNumber - 1];
+  useEffect(() => {
+    setIsAnswered(false);
+  }, [questionNumber]);
 
   const handleSelectAnswer = (selectedOption: string) => {
-    if (!currentQuestion) return;
-    dispatch(selectAnswer({
-      questionId: currentQuestion.id,
-      selectedOption
-    }));
+    if (!currentQuestion || isAnswered) return;
+
+    setIsAnswered(true);
+    dispatch(selectAnswer({ questionId: currentQuestion.id, selectedOption }));
 
     setTimeout(() => {
-      dispatch(nextQuestion());
-    }, 2000); // Wait for animations before moving to the next question
-  };
-
-  const handleUseLifeline = (lifeline: 'fiftyFifty' | 'audiencePoll') => {
-    if (!currentQuestion) return;
-    dispatch(useLifeline({
-        lifeline,
-        questionId: currentQuestion.id
-    }));
+        dispatch(nextQuestion());
+    }, 3000);
   };
 
   if (!currentQuestion) {
-    // This state could be a "You've Won!" screen
-    return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-[#02041d] to-[#0a0c3d]">
-            <h1 className="text-4xl text-yellow-400 font-bold">Congratulations! You've answered all questions!</h1>
-        </div>
-    );
+    return <div className="text-white text-2xl">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#02041d] to-[#0a0c3d] flex flex-col items-center justify-center p-4 lg:p-8 overflow-hidden">
-      <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="w-full max-w-screen-2xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Main Game Area */}
-        <div className="lg:col-span-3 flex flex-col gap-6 order-2 lg:order-1">
-          <div className="flex justify-between items-center px-4">
-            <Timer isPaused={false} onTimeUp={() => {}} />
-            <Lifelines onUseLifeline={handleUseLifeline} />
+        <div className="lg:col-start-4 lg:col-span-6 flex flex-col items-center gap-6 order-2 lg:order-1">
+          <div className="w-full flex justify-center items-center px-4">
+             <Lifelines questionId={currentQuestion.id} />
           </div>
           <QuestionPanel
+            key={currentQuestion.id}
             question={currentQuestion}
             onSelectAnswer={handleSelectAnswer}
+            isAnswered={isAnswered}
           />
         </div>
 
-        {/* Money Pyramid */}
-        <div className="order-1 lg:order-2">
-          <MoneyPyramid />
+        {/* Right Panel Area */}
+        <div className="lg:col-span-3 lg:col-start-10 flex flex-col justify-between items-center order-1 lg:order-2 h-full">
+           <Timer key={questionNumber} initialTime={60} isPaused={isAnswered} onTimeUp={() => navigate('/game-over')} />
+           <MoneyPyramid currentLevel={questionNumber} />
         </div>
       </div>
-    </div>
   );
 };
 

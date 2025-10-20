@@ -3,22 +3,16 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    /* ... other CSS variables ... */
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    /* ... other dark mode variables ... */
+  body {
+    @apply bg-gray-900 text-gray-100;
   }
 }
 
+/* Custom styles for the KBC theme */
 body {
-  @apply bg-background text-foreground;
-  font-family: 'Inter', sans-serif;
+  /* A dark, atmospheric radial gradient for the background */
   background-color: #02041d;
-  color: white;
+  background-image: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
 }

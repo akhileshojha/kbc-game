@@ -1,67 +1,52 @@
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { Users, Phone, ShieldHalf } from 'lucide-react';
 import { RootState } from '@/store/store';
-import { Phone, Users, Divide } from 'lucide-react';
+import { useLifeline } from '@/store/gameSlice';
 
-type Lifeline = 'fiftyFifty' | 'audiencePoll';
+const LifelineButton = ({ icon: Icon, onClick, used, label }: { icon: React.ElementType, onClick: () => void, used: boolean, label: string }) => {
+  const baseClasses = "relative flex flex-col items-center justify-center w-20 h-20 md:w-24 md:h-24 bg-blue-900/50 border-2 border-blue-400 rounded-full transition-all duration-300";
+  const activeClasses = "hover:bg-blue-800 hover:border-yellow-400 cursor-pointer";
+  const usedClasses = "opacity-40 cursor-not-allowed";
 
-interface Props {
-  onUseLifeline: (lifeline: Lifeline) => void;
-}
-
-const LifelineButton = ({
-  icon: Icon,
-  onClick,
-  isDisabled,
-  label,
-}: {
-  icon: React.ElementType;
-  onClick: () => void;
-  isDisabled: boolean;
-  label: string;
-}) => {
   return (
-    <button
-      onClick={onClick}
-      disabled={isDisabled}
-      className={`relative flex flex-col items-center justify-center w-20 h-20 md:w-24 md:h-24 bg-blue-900/50 border-2 border-blue-400 rounded-full transition-all duration-300 hover:border-yellow-400 hover:bg-blue-800/70 disabled:opacity-30 disabled:cursor-not-allowed`}
-      aria-label={`Use ${label} lifeline`}
-    >
-      <Icon className="w-8 h-8 md:w-10 md:h-10" />
-      {isDisabled && (
-        <div className="absolute inset-0 flex items-center justify-center">
-            <svg className="w-full h-full text-red-500" viewBox="0 0 100 100">
-                <line x1="10" y1="10" x2="90" y2="90" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
-                <line x1="90" y1="10" x2="10" y2="90" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
-            </svg>
-        </div>
-      )}
+    <button onClick={onClick} disabled={used} className={`${baseClasses} ${used ? usedClasses : activeClasses}`}>
+      <Icon className="w-8 h-8 md:w-10 md:h-10 text-yellow-400 mb-1" />
+      <span className="text-xs font-semibold uppercase tracking-wider">{label}</span>
+      {used && <div className="absolute inset-0 flex items-center justify-center"><span className="text-red-500 text-5xl font-bold transform rotate-12">X</span></div>}
     </button>
   );
-};
+}
 
+const Lifelines = ({ questionId }: { questionId: number }) => {
+  const dispatch = useDispatch();
+  const usedLifelines = useSelector((state: RootState) => state.game.usedLifelines);
 
-const Lifelines = ({ onUseLifeline }: Props) => {
-  const { usedLifelines } = useSelector((state: RootState) => state.game);
+  const handleUseLifeline = (lifeline: 'fiftyFifty' | 'audiencePoll') => {
+    if (!usedLifelines[lifeline]) {
+      dispatch(useLifeline({ lifeline, questionId }));
+    }
+  };
 
   return (
-    <div className="flex gap-3 md:gap-4">
+    <div className="flex items-center gap-4 md:gap-6">
       <LifelineButton
-        icon={Divide}
-        onClick={() => onUseLifeline('fiftyFifty')}
-        isDisabled={usedLifelines.fiftyFifty}
+        icon={ShieldHalf}
+        onClick={() => handleUseLifeline('fiftyFifty')}
+        used={usedLifelines.fiftyFifty}
         label="50:50"
       />
       <LifelineButton
         icon={Users}
-        onClick={() => onUseLifeline('audiencePoll')}
-        isDisabled={usedLifelines.audiencePoll}
-        label="Audience Poll"
+        onClick={() => handleUseLifeline('audiencePoll')}
+        used={usedLifelines.audiencePoll}
+        label="Poll"
       />
+       {/* Placeholder for a third lifeline */}
       <LifelineButton
         icon={Phone}
-        onClick={() => alert('Phone-a-friend not implemented yet!')}
-        isDisabled={true} // Placeholder
-        label="Phone a Friend"
+        onClick={() => alert('Friend lifeline not implemented yet!')}
+        used={false} 
+        label="Friend"
       />
     </div>
   );
